@@ -402,6 +402,7 @@
       }
 
       /* nav */
+      .nav { padding-left: 1.2rem; }
       .hamburger { display: flex; }
 
       .nav-links {
@@ -413,16 +414,17 @@
         align-items: center;
         gap: 1.8rem;
         padding: 2.5rem 2rem;
-        background: rgba(60, 12, 56, 0.88);
+        background: rgba(245, 176, 206, 0.80);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(255,255,255,0.15);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         z-index: 9;
       }
 
       .nav-links.open { display: flex; }
 
-      .nav-links a { font-size: 1rem; }
+      .nav-links a { font-size: 1rem; color: #D4B0E8; }
+      .nav-links a:hover { color: #E21C21; }
 
       /* hero layout — stack vertically, centered */
       .hero-layout {
@@ -501,13 +503,15 @@
 
       /* tap hint — visible on mobile */
       .tap-hint {
-        display: block;
+        display: block !important;
+        position: relative;
+        z-index: 2;
         text-align: center;
-        font-size: 0.72rem;
-        letter-spacing: 0.12em;
+        font-size: 0.78rem;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: rgba(250, 249, 249, 0.45);
-        margin: 0.6rem 0 -0.4rem;
+        color: rgba(250, 249, 249, 0.75);
+        margin: 1rem 2rem 0.5rem;
       }
 
       /* card scaling for mobile */
@@ -735,8 +739,8 @@
   <canvas id="fluid-canvas"></canvas>
 
   <nav class="nav">
-    <img src="https://static.wixstatic.com/media/78d628_4679af2b5c6b4c959ff2a7f809c3a098~mv2.png/v1/fill/w_248,h_58,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Quantiflow%20Logo%20White.png"
-         alt="QuantiFlow" />
+    <a href="#" aria-label="Home"><img src="https://static.wixstatic.com/media/78d628_4679af2b5c6b4c959ff2a7f809c3a098~mv2.png/v1/fill/w_248,h_58,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Quantiflow%20Logo%20White.png"
+         alt="QuantiFlow" /></a>
     <div class="nav-links" id="nav-links">
       <a href="#"          class="nav-close">Home</a>
       <a href="#section-2" class="nav-close">About</a>
@@ -809,7 +813,7 @@
   </div>
 
   <!-- ── Tap hint (mobile only) ── -->
-  <p class="tap-hint">Tap a card to reveal the solution</p>
+  <p class="tap-hint">Flip each card to see Quantiflow's solution</p>
 
   <!-- ── Cards section ── -->
   <section class="cards-section">
