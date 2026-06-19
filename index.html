@@ -323,6 +323,47 @@
       max-width: 640px;
     }
 
+    /* ── Footer ── */
+    .site-footer {
+      position: relative;
+      z-index: 1;
+      padding: 2rem 3rem;
+      background: rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(255, 255, 255, 0.28);
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-brand {
+      font-family: 'avenir-lt-w01_35-light1475496', 'Avenir', 'Helvetica Neue', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: rgba(250, 249, 249, 0.75);
+    }
+
+    .footer-social {
+      display: flex;
+      gap: 1.4rem;
+      align-items: center;
+    }
+
+    .footer-social a {
+      color: rgba(250, 249, 249, 0.75);
+      transition: color 0.2s ease;
+      display: flex;
+    }
+
+    .footer-social a:hover { color: #F07AAE; }
+
+
     .mission-body em {
       font-style: italic;
       font-weight: 700;
@@ -401,30 +442,73 @@
         box-sizing: border-box;
       }
 
-      /* nav */
-      .nav { padding-left: 1.2rem; }
+      /* nav bar */
+      .nav { padding: 1rem 1.4rem; }
       .hamburger { display: flex; }
 
-      .nav-links {
+      /* hide desktop nav links on mobile */
+      .nav-links { display: none; }
+
+      /* dim overlay */
+      .nav-overlay {
         display: none;
         position: fixed;
-        top: 65px;
-        left: 0; right: 0;
+        inset: 0;
+        background: rgba(60, 12, 56, 0.4);
+        z-index: 98;
+      }
+      .nav-overlay.open { display: block; }
+
+      /* slide-in drawer */
+      .mobile-drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 72%;
+        max-width: 290px;
+        display: flex;
         flex-direction: column;
-        align-items: center;
-        gap: 1.8rem;
-        padding: 2.5rem 2rem;
-        background: rgba(245, 176, 206, 0.80);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        z-index: 9;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 2rem;
+        padding: 4rem 2.5rem;
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-left: 1px solid rgba(212, 176, 232, 0.3);
+        box-shadow: -12px 0 40px rgba(60, 12, 56, 0.18);
+        z-index: 99;
+        transform: translateX(100%);
+        transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
-      .nav-links.open { display: flex; }
+      .mobile-drawer.open { transform: translateX(0); }
 
-      .nav-links a { font-size: 1rem; color: #D4B0E8; }
-      .nav-links a:hover { color: #E21C21; }
+      .drawer-close {
+        position: absolute;
+        top: 1.2rem;
+        right: 1.2rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #D4B0E8;
+        padding: 4px;
+        display: flex;
+      }
+
+      .drawer-link {
+        font-family: 'avenir-lt-w01_35-light1475496', 'Avenir', 'Helvetica Neue', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-decoration: none;
+        color: #D4B0E8;
+        transition: color 0.2s ease;
+      }
+      .drawer-link:hover { color: #E21C21; }
+      .mobile-drawer .btn-nav-waitlist { font-size: 0.9rem; padding: 0.7rem 1.6rem; }
 
       /* hero layout — stack vertically, centered */
       .hero-layout {
@@ -458,7 +542,9 @@
       .modules-stack { display: none; }
 
       /* cards header */
-      .cards-header { padding: 3rem 2rem 0; }
+      .cards-header { padding: 1.5rem 1.8rem 0; }
+      .cards-header h2 { font-size: clamp(1rem, 4.8vw, 1.5rem); line-height: 1.25; }
+      .cards-header h2 em { font-size: 1em; margin-top: 0.15rem; }
 
       /* cards — single column stack */
       .cards-section {
@@ -475,6 +561,11 @@
         transform-style: preserve-3d !important;
         transition: transform 0.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) !important;
       }
+
+      /* footer tighten on mobile */
+      .site-footer { padding: 1.5rem 1.4rem; }
+      .footer-social { gap: 0.9rem; }
+      .footer-brand { font-size: 0.72rem; }
 
       /* suppress desktop hover on mobile */
       .flip-card:hover .flip-card-inner { transform: none !important; }
@@ -741,6 +832,7 @@
   <nav class="nav">
     <a href="#" aria-label="Home"><img src="https://static.wixstatic.com/media/78d628_4679af2b5c6b4c959ff2a7f809c3a098~mv2.png/v1/fill/w_248,h_58,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Quantiflow%20Logo%20White.png"
          alt="QuantiFlow" /></a>
+    <!-- desktop links sit inline in nav -->
     <div class="nav-links" id="nav-links">
       <a href="#"          class="nav-close">Home</a>
       <a href="#section-2" class="nav-close">About</a>
@@ -751,6 +843,20 @@
       <span></span><span></span><span></span>
     </button>
   </nav>
+
+  <!-- mobile drawer + overlay live outside <nav> so fixed positioning is unconstrained -->
+  <div class="mobile-drawer" id="mobile-drawer">
+    <button class="drawer-close nav-close" aria-label="Close menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 3l14 14M17 3L3 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <a href="#"          class="nav-close drawer-link">Home</a>
+    <a href="#section-2" class="nav-close drawer-link">About</a>
+    <a href="#section-3" class="nav-close drawer-link">Contact</a>
+    <a href="#"          class="btn-nav-waitlist nav-close">Join Waitlist</a>
+  </div>
+  <div class="nav-overlay" id="nav-overlay"></div>
 
   <div class="hero-layout">
 
@@ -813,7 +919,7 @@
   </div>
 
   <!-- ── Tap hint (mobile only) ── -->
-  <p class="tap-hint">Flip each card to see Quantiflow's solution</p>
+  <p class="tap-hint anim-up">Flip each card to see Quantiflow's solution</p>
 
   <!-- ── Cards section ── -->
   <section class="cards-section">
@@ -872,10 +978,6 @@
 
   </section>
 
-  <!-- ── Waitlist CTA below cards ── -->
-  <div style="position:relative;z-index:1;display:flex;justify-content:center;padding:0;margin-top:-6rem;">
-    <button class="btn-waitlist">Join the Waitlist</button>
-  </div>
 
   <!-- ── Mission section ── -->
   <section id="section-3" class="mission-section">
@@ -895,6 +997,34 @@
       <button class="btn-submit" type="submit">Send Message</button>
     </form>
   </section>
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span class="footer-brand">© 2025 QuantiFlow</span>
+      <div class="footer-social">
+        <a href="#" aria-label="Facebook">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <a href="#" aria-label="Instagram">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/>
+            <circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>
+          </svg>
+        </a>
+        <a href="#" aria-label="LinkedIn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="2" y="9" width="4" height="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="4" cy="4" r="2" stroke="currentColor" stroke-width="1.8"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </footer>
 
   <script>
     const canvas = document.getElementById('fluid-canvas');
@@ -1076,19 +1206,26 @@
     requestAnimationFrame(render);
 
     // ── Hamburger menu ────────────────────────────────────────────
-    const hamburger = document.getElementById('hamburger');
-    const navLinks  = document.getElementById('nav-links');
+    const hamburger    = document.getElementById('hamburger');
+    const mobileDrawer = document.getElementById('mobile-drawer');
+    const navOverlay   = document.getElementById('nav-overlay');
+
+    function closeMenu() {
+      hamburger.classList.remove('open');
+      mobileDrawer.classList.remove('open');
+      navOverlay.classList.remove('open');
+    }
 
     hamburger.addEventListener('click', () => {
       hamburger.classList.toggle('open');
-      navLinks.classList.toggle('open');
+      mobileDrawer.classList.toggle('open');
+      navOverlay.classList.toggle('open');
     });
 
+    navOverlay.addEventListener('click', closeMenu);
+
     document.querySelectorAll('.nav-close').forEach(link => {
-      link.addEventListener('click', () => {
-        hamburger.classList.remove('open');
-        navLinks.classList.remove('open');
-      });
+      link.addEventListener('click', closeMenu);
     });
 
     // ── Tap to flip on mobile — matchMedia stays in sync with CSS breakpoints ──
