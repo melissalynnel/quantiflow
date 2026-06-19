@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuantiFlow</title>
+  <style>
+    :root {
+      --color-primary: #3C0C38;
+      --color-cream:   #FAF9F9;
+      --color-light:   #EBE5E5;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html {
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: 'Avenir', 'Avenir LT W01 35 Light', 'Helvetica Neue', sans-serif;
+      color: var(--color-primary);
+      overflow-x: hidden;
+      width: 100%;
+    }
+
+    /* Canvas is oversized by PAD on every side so CSS blur
+       doesn't leave soft dark halos at the viewport edges. */
+    #fluid-canvas {
+      position: fixed;
+      z-index: -1;
+      /* blur blends blobs together; saturate punches colour slightly */
+      filter: blur(64px) saturate(1.15);
+    }
+
+    /* ── top nav ── */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      padding: 1.4rem 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .nav img {
+      height: 28px;
+      width: auto;
+      display: block;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .nav-links a {
+      font-family: 'avenir-lt-w01_35-light1475496', 'Avenir', 'Helvetica Neue', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: #D4B0E8;
+      transition: color 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: #E21C21;
+    }
+
+    .btn-nav-waitlist {
+      font-family: 'avenir-lt-w01_35-light1475496', 'Avenir', 'Helvetica Neue', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: #FAF9F9;
+      background: #3C0C38;
+      border: none;
+      border-radius: 100px;
+      padding: 0.6rem 1.4rem;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(60, 12, 56, 0.4);
+      transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-nav-waitlist:hover {
+      background: #5a1254;
+      color: #E21C21;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(60, 12, 56, 0.55);
+    }
+
+    /* ── hero layout — left text + right modules ── */
+    .hero-layout {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .hero {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 8rem 4rem 0 10vw;
+      max-width: 680px;
+    }
+
+    /* ── feature modules ── */
+    .modules-stack {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.75rem;
+      padding: 8rem 6vw 0 0;
+    }
+
+    .module {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      border-radius: 100px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(60, 12, 56, 0.12), inset 0 1px 0 rgba(255,255,255,0.25);
+      padding: 0.85rem 2.2rem;
+      color: #FAF9F9;
+      cursor: default;
+      width: 220px;
+      overflow: hidden;
+      /* slide-in from right */
+      opacity: 0;
+      animation: slideInRight 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      transition: background 0.25s ease, border-radius 0.3s ease, box-shadow 0.25s ease;
+    }
+
+    .module:nth-child(1) { animation-delay: 0.4s; }
+    .module:nth-child(2) { animation-delay: 0.7s; }
+    .module:nth-child(3) { animation-delay: 1.0s; }
+
+    .module:hover {
+      background: rgba(255, 255, 255, 0.26);
+      border-radius: 1.4rem;
+      box-shadow: 0 8px 28px rgba(60, 12, 56, 0.22), inset 0 1px 0 rgba(255,255,255,0.35);
+    }
+
+    .module-label {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-family: 'avenir-lt-w01_35-light1475496', 'Avenir', 'Helvetica Neue', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .module-link {
+      text-decoration: none;
+      display: block;
+    }
+
+    .check {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .module-detail {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      font-family: 'avenir-lt-w01_35-light1475496', 'Avenir', 'Helvetica Neue', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      color: rgba(250, 249, 249, 0.82);
+      transition: max-height 0.35s ease, opacity 0.3s ease, margin-top 0.3s ease;
+      margin-top: 0;
+    }
+
+    .module:hover .module-detail {
+      max-height: 60px;
+      opacity: 1;
+      margin-top: 0.55rem;
+    }
+
+    /* ── mission section ── */
+    .mission-section {
+      position: relative;
+      z-index: 1;
+      padding: 14rem 8vw 7rem;
+      display: flex;
+      align-items: center;
+      gap: 5rem;
+    }
+
+    .mission-text {
+      flex: 1;
+    }
+
+    .mission-section .section-label {
+      font-family: 'avenir-lt-w01_35-light1475496', 'Avenir', 'Helvetica Neue', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(250, 249, 249, 0.55);
+      margin-bottom: 1.2rem;
+    }
+
+    .mission-section h2 {
+      font-family: 'kepler-w03-light-scd-cp', Georgia, serif;
+      font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+      font-weight: 300;
+      line-height: 1.15;
+      color: #FAF9F9;
+      text-shadow: 0 2px 32px rgba(60, 12, 56, 0.3);
+      margin: 0;
+    }
+
+    /* ── contact form ── */
+    .mission-form {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .mission-form input,
+    .mission-form textarea {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.38);
+      border-radius: 0.9rem;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 0.9rem 1.3rem;
+      font-family: 'avenir-lt-w01_35-light1475496', 'Avenir', 'Helvetica Neue', sans-serif;
+      font-size: 0.95rem;
+      color: #FAF9F9;
+      outline: none;
+      transition: background 0.2s ease, border-color 0.2s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
+    }
+
+    .mission-form input::placeholder,
+    .mission-form textarea::placeholder {
+      color: rgba(250, 249, 249, 0.45);
+    }
+
+    .mission-form input:focus,
+    .mission-form textarea:focus {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.65);
+    }
+
+    .mission-form textarea {
+      resize: none;
+      height: 140px;
+    }
+
+    .btn-submit {
+      align-self: flex-start;
+      padding: 0.85rem 2.2rem;
+      font-family: 'avenir-lt-w01_35-light1475496', 'Avenir', 'Helvetica Neue', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #FAF9F9;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      border-radius: 100px;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 4px 24px rgba(60, 12, 56, 0.15), inset 0 1px 0 rgba(255,255,255,0.25);
+      transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+    }
+
+    .btn-submit:hover {
+      background: rgba(255, 255, 255, 0.28);
+      box-shadow: 0 8px 32px rgba(60, 12, 56, 0.25), inset 0 1px 0 rgba(255,255,255,0.35);
+      transform: translateY(-2px);
+    }
+
+    .btn-submit:active { transform: translateY(0); }
+
+    .mission-section h2 span {
+      display: block;
+      font-size: clamp(1.1rem, 2vw, 1.5rem);
+      font-weight: 300;
+      opacity: 0.82;
+      margin-top: 0.5rem;
+      letter-spacing: 0.01em;
+    }
+
+    .mission-body {
+      margin-top: 2.4rem;
+      font-family: 'avenir-lt-w01_35-light1475496', 'Avenir', 'Helvetica Neue', sans-serif;
+      font-size: clamp(1rem, 1.5vw, 1.15rem);
+      line-height: 1.75;
+      color: rgba(250, 249, 249, 0.85);
+      max-width: 640px;
+    }
+
+    .mission-body em {
+      font-style: italic;
+      font-weight: 700;
+      color: #FAF9F9;
+    }
+
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(100px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── scroll animations ── */
+    .anim-up {
+      opacity: 0;
+      transform: translateY(70px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .anim-right {
+      opacity: 0;
+      transform: translateX(70px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+
+    .anim-up.visible,
+    .anim-right.visible {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+
+    /* stagger delays for cards */
+    .flip-card:nth-child(1) { transition-delay: 0.00s; }
+    .flip-card:nth-child(2) { transition-delay: 0.12s; }
+    .flip-card:nth-child(3) { transition-delay: 0.24s; }
+    .flip-card:nth-child(4) { transition-delay: 0.36s; }
+
+    /* form slides in as one unit */
+    .mission-form { transition-delay: 0.15s; }
+
+    /* ── hamburger ── */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .mob-br { display: none; }
+
+    .hamburger span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: #D4B0E8;
+      border-radius: 2px;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* ── mobile styles ── */
+    @media (max-width: 768px) {
+
+      /* full width — override all desktop max-widths */
+      body, .hero-layout, .hero, .cards-header, .cards-section,
+      .mission-section, .mission-text, .mission-body,
+      .mission-section h2, .mission-body {
+        width: 100%;
+        max-width: 100% !important;
+        box-sizing: border-box;
+      }
+
+      /* nav */
+      .hamburger { display: flex; }
+
+      .nav-links {
+        display: none;
+        position: fixed;
+        top: 65px;
+        left: 0; right: 0;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.8rem;
+        padding: 2.5rem 2rem;
+        background: rgba(60, 12, 56, 0.88);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255,255,255,0.15);
+        z-index: 9;
+      }
+
+      .nav-links.open { display: flex; }
+
+      .nav-links a { font-size: 1rem; }
+
+      /* hero layout — stack vertically */
+      .hero-layout {
+        flex-direction: column;
+        align-items: flex-start;
+        min-height: 100vh;
+        padding-bottom: 3rem;
+      }
+
+      .hero {
+        padding: 7rem 1.5rem 1.5rem;
+        max-width: 100%;
+        width: 100%;
+      }
+
+      .mob-br { display: block; }
+
+      .hero h1 {
+        white-space: normal;
+        font-size: clamp(1.8rem, 7vw, 2.6rem);
+      }
+
+      .hero p {
+        max-width: 100%;
+        width: 100%;
+        padding-right: 0;
+      }
+
+      /* modules — hidden on mobile */
+      .modules-stack { display: none; }
+
+      /* cards header */
+      .cards-header { padding: 3rem 2rem 0; }
+
+      /* cards — single column stack */
+      .cards-section {
+        grid-template-columns: 1fr !important;
+        padding: 1.5rem 2rem 4rem;
+        gap: 1.2rem;
+      }
+
+      /* mobile: 3D flip via tap — fixed height so absolute faces render */
+      .flip-card { height: 344px !important; }
+
+      .flip-card-inner {
+        height: 100% !important;
+        transform-style: preserve-3d !important;
+        transition: transform 0.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) !important;
+      }
+
+      .flip-card-front,
+      .flip-card-back {
+        position: absolute !important;
+        inset: 0 !important;
+        backface-visibility: hidden !important;
+        -webkit-backface-visibility: hidden !important;
+        display: flex !important;
+      }
+
+      .flip-card-back { transform: rotateY(180deg) !important; }
+
+      /* mission — stack vertically */
+      .mission-section {
+        flex-direction: column;
+        padding: 4rem 2rem 5rem;
+        gap: 2.5rem;
+      }
+
+      .mission-text, .mission-form { width: 100%; flex: none; }
+
+      .mission-section h2 { font-size: clamp(2rem, 8vw, 3rem); }
+
+      /* tap hint — visible on mobile */
+      .tap-hint {
+        display: block;
+        text-align: center;
+        font-size: 0.72rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(250, 249, 249, 0.45);
+        margin: 0.6rem 0 -0.4rem;
+      }
+
+      /* card scaling for mobile */
+      .flip-card-front,
+      .flip-card-back {
+        padding: 2.8rem 1.4rem 1.6rem;
+      }
+
+      .flip-card-front::before,
+      .flip-card-back::before {
+        top: 1rem;
+        left: 1.4rem;
+      }
+
+      .card-title { font-size: 1.3rem; }
+      .card-body  { font-size: 0.84rem; }
+      .card-back-text { font-size: 0.9rem; }
+
+      /* scroll animations — reduce translation on mobile */
+      .anim-up  { transform: translateY(40px); }
+      .anim-right { transform: translateX(40px); }
+    }
+
+    @media (max-width: 480px) {
+      .cards-section { padding: 1rem 1.2rem 3rem; }
+      .flip-card { min-height: 200px; }
+    }
+
+    /* desktop: suppress click-flip; hover handles rotation via higher specificity */
+    @media (min-width: 769px) {
+      .flip-card-inner.flipped { transform: none; }
+    }
+
+    /* anchor offset so fixed nav doesn't cover targets */
+    #section-2,
+    #section-3 {
+      scroll-margin-top: 75px;
+    }
+
+    /* tap hint hidden on desktop */
+    .tap-hint { display: none; }
+
+    /* ── cards intro header ── */
+    .cards-header {
+      position: relative;
+      z-index: 1;
+      padding: 2rem 8vw 0;
+      width: 100%;
+      text-align: center;
+    }
+
+    .cards-header h2 {
+      font-family: 'kepler-w03-light-scd-cp', Georgia, serif;
+      font-size: clamp(1.6rem, 3vw, 2.6rem);
+      font-weight: 300;
+      line-height: 1.25;
+      color: rgba(250, 249, 249, 0.55);
+      text-shadow: 0 2px 32px rgba(60, 12, 56, 0.3);
+      margin: 0 auto;
+      max-width: 780px;
+    }
+
+    .cards-header h2 em {
+      font-style: normal;
+      opacity: 1;
+      display: block;
+      margin-top: 0.3rem;
+      font-size: 1em;
+      color: #FFFFFF;
+    }
+
+    /* ── cards section ── */
+    .cards-section {
+      position: relative;
+      z-index: 1;
+      padding: 2rem 8vw 6rem;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+    }
+
+    /* perspective wrapper per card */
+    .flip-card {
+      perspective: 1200px;
+      height: 320px;
+    }
+
+    .flip-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.7s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+    }
+
+    .flip-card:hover .flip-card-inner {
+      transform: rotateY(180deg);
+    }
+
+    /* click-to-flip (used by mobile tap; suppressed on desktop via higher-specificity hover rule) */
+    .flip-card-inner.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .flip-card-front,
+    .flip-card-back {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 1.5rem;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 8px 32px rgba(60, 12, 56, 0.14), inset 0 1px 0 rgba(255,255,255,0.28);
+      padding: 3.8rem 1.8rem 2rem;
+      color: #FAF9F9;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .flip-card-back {
+      transform: rotateY(180deg);
+      background: rgba(255, 255, 255, 0.22);
+    }
+
+    .flip-card-front::before,
+    .flip-card-back::before {
+      position: absolute;
+      top: 1.4rem;
+      left: 1.8rem;
+      font-family: 'avenir-lt-w01_35-light1475496', 'Avenir', 'Helvetica Neue', sans-serif;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      color: rgba(250, 249, 249, 0.5);
+    }
+
+    .flip-card-front::before { content: 'PROBLEM'; }
+    .flip-card-back::before  { content: 'SOLUTION'; }
+
+    .card-title {
+      font-family: 'kepler-w03-light-scd-cp', Georgia, serif;
+      font-size: 1.6rem;
+      font-weight: 300;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.4rem;
+    }
+
+    .card-subtitle {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      opacity: 0.65;
+    }
+
+    .card-body {
+      margin-top: 1rem;
+      font-size: 0.88rem;
+      line-height: 1.65;
+      color: rgba(250, 249, 249, 0.78);
+    }
+
+    .card-back-text {
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: rgba(250, 249, 249, 0.9);
+    }
+
+    .hero h1 {
+      font-family: 'kepler-w03-light-scd-cp', Georgia, serif;
+      font-size: clamp(2rem, 3.6vw, 3.2rem);
+      font-weight: 300;
+      line-height: 1.1;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      color: #FAF9F9;
+      text-shadow: 0 2px 40px rgba(60, 12, 56, 0.35);
+      margin: 0;
+    }
+
+    .hero p {
+      margin-top: 1.5rem;
+      font-family: 'avenir-lt-w01_35-light1475496', 'Avenir', 'Helvetica Neue', sans-serif;
+      font-size: clamp(1rem, 1.6vw, 1.2rem);
+      font-weight: 400;
+      line-height: 1.6;
+      color: rgba(250, 249, 249, 0.88);
+      text-shadow: 0 1px 12px rgba(60, 12, 56, 0.25);
+    }
+
+    .btn-waitlist {
+      display: inline-block;
+      align-self: flex-start;
+      margin-top: 2rem;
+      padding: 0.85rem 2.2rem;
+      font-family: 'avenir-lt-w01_35-light1475496', 'Avenir', 'Helvetica Neue', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: #FAF9F9;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      border-radius: 100px;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 4px 24px rgba(60, 12, 56, 0.15), inset 0 1px 0 rgba(255,255,255,0.25);
+      transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+    }
+
+    .btn-waitlist:hover {
+      background: rgba(255, 255, 255, 0.28);
+      box-shadow: 0 8px 32px rgba(60, 12, 56, 0.25), inset 0 1px 0 rgba(255,255,255,0.35);
+      transform: translateY(-2px);
+    }
+
+    .btn-waitlist:active {
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="fluid-canvas"></canvas>
+
+  <nav class="nav">
+    <img src="https://static.wixstatic.com/media/78d628_4679af2b5c6b4c959ff2a7f809c3a098~mv2.png/v1/fill/w_248,h_58,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Quantiflow%20Logo%20White.png"
+         alt="QuantiFlow" />
+    <div class="nav-links" id="nav-links">
+      <a href="#"          class="nav-close">Home</a>
+      <a href="#section-2" class="nav-close">About</a>
+      <a href="#section-3" class="nav-close">Contact</a>
+      <a href="#"          class="btn-nav-waitlist nav-close">Join Waitlist</a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="hero-layout">
+
+    <div class="hero">
+      <h1>GET THE<br class="mob-br"> CARE YOU<br class="mob-br"> NEED</h1>
+      <p>The first digital health system for objective, accurate measurement of menstrual blood loss.</p>
+      <button class="btn-waitlist">Join the Waitlist</button>
+    </div>
+
+    <div class="modules-stack">
+      <a href="#section-2" class="module-link">
+        <div class="module">
+          <div class="module-label">
+            <span class="check">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2 5l2.5 2.5 3.5-4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            Objective
+          </div>
+          <div class="module-detail">Unbiased, clinically validated data your care team can rely on.</div>
+        </div>
+      </a>
+      <a href="#section-2" class="module-link">
+        <div class="module">
+          <div class="module-label">
+            <span class="check">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2 5l2.5 2.5 3.5-4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            Accurate
+          </div>
+          <div class="module-detail">Precise quantification down to the milliliter, every cycle.</div>
+        </div>
+      </a>
+      <a href="#section-2" class="module-link">
+        <div class="module">
+          <div class="module-label">
+            <span class="check">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2 5l2.5 2.5 3.5-4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            Measured
+          </div>
+          <div class="module-detail">Longitudinal tracking that reveals patterns over time.</div>
+        </div>
+      </a>
+    </div>
+
+  </div>
+
+  <!-- ── Cards intro header ── -->
+  <div id="section-2" class="cards-header anim-up">
+    <h2>
+      Too many women are not getting the care they need for their heavy periods.
+      <em>Quantiflow changes that<span style="color:#E21C21;">.</span></em>
+    </h2>
+  </div>
+
+  <!-- ── Tap hint (mobile only) ── -->
+  <p class="tap-hint">Tap a card to reveal the solution</p>
+
+  <!-- ── Cards section ── -->
+  <section class="cards-section">
+
+    <div class="flip-card anim-up">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <div class="card-title">Accuracy Matters</div>
+          <p class="card-body">Current methods of estimating menstrual blood loss lack accuracy, making it difficult for women to measure and monitor their menstrual bleeding effectively.</p>
+        </div>
+        <div class="flip-card-back">
+          <div class="card-title">Advanced ML Algorithms</div>
+          <p class="card-back-text">Images are translated to a precise measurement of menstrual blood loss using our advanced machine learning and computer vision algorithms.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card anim-up">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <div class="card-title">Misdiagnoses</div>
+          <p class="card-body">Incorrect estimates can lead to misdiagnosis of underlying conditions and unnecessary interventions.</p>
+        </div>
+        <div class="flip-card-back">
+          <div class="card-title">Clinician-Backed & Scientific</div>
+          <p class="card-back-text">The preliminary results from our multi-center pivotal study show that we are over twice as accurate as the standard of care.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card anim-up">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <div class="card-title">Emotional Impact</div>
+          <p class="card-body">Improper evaluation can lead to emotional distress and anxiety for women who experience heavy periods.</p>
+        </div>
+        <div class="flip-card-back">
+          <div class="card-title">Convenience & Privacy</div>
+          <p class="card-back-text">The Quantiflow app integrates seamlessly into women's daily lives. It is easy to use and allows for tracking of menstrual flow, symptoms, and activities.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card anim-up">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <div class="card-title">Objective Measurement</div>
+          <p class="card-body">Subjective measures are unreliable as they can be susceptible to implicit biases and communication barriers. Also, they are influenced by cultural and societal experiences.</p>
+        </div>
+        <div class="flip-card-back">
+          <div class="card-title">Our Solution</div>
+          <p class="card-back-text">Objective, accurate measurement of menstrual blood loss.</p>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ── Waitlist CTA below cards ── -->
+  <div style="position:relative;z-index:1;display:flex;justify-content:center;padding:0;margin-top:-6rem;">
+    <button class="btn-waitlist">Join the Waitlist</button>
+  </div>
+
+  <!-- ── Mission section ── -->
+  <section id="section-3" class="mission-section">
+    <div class="mission-text">
+      <h2>
+        Join our mission
+        <span>to empower women to make informed decisions about their menstrual health.</span>
+      </h2>
+      <p class="mission-body">
+        We don't want to do this alone. We are seeking <em>investors</em>,
+        <em>strategic partners</em>, and <em>clinicians and researchers</em>.
+      </p>
+    </div>
+    <form class="mission-form anim-right" onsubmit="return false;">
+      <input type="email" placeholder="Your email address" />
+      <textarea placeholder="Your message"></textarea>
+      <button class="btn-submit" type="submit">Send Message</button>
+    </form>
+  </section>
+
+  <script>
+    const canvas = document.getElementById('fluid-canvas');
+    const ctx    = canvas.getContext('2d');
+
+    // Extra pixels on each side so the CSS blur never clips at the viewport edge.
+    let PAD = window.innerWidth < 768 ? 40 : 160;
+
+    function resize() {
+      PAD = window.innerWidth < 768 ? 40 : 160;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      canvas.width  = vw + PAD * 2;
+      canvas.height = vh + PAD * 2;
+      canvas.style.width  = canvas.width  + 'px';
+      canvas.style.height = canvas.height + 'px';
+      canvas.style.top    = -PAD + 'px';
+      canvas.style.left   = -PAD + 'px';
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // ── Smooth closed curve via Catmull-Rom → cubic Bézier ──────────
+    function drawBlob(pts) {
+      const n = pts.length;
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 0; i < n; i++) {
+        const p0 = pts[(i - 1 + n) % n];
+        const p1 = pts[i];
+        const p2 = pts[(i + 1) % n];
+        const p3 = pts[(i + 2) % n];
+        ctx.bezierCurveTo(
+          p1.x + (p2.x - p0.x) / 6,
+          p1.y + (p2.y - p0.y) / 6,
+          p2.x - (p3.x - p1.x) / 6,
+          p2.y - (p3.y - p1.y) / 6,
+          p2.x, p2.y
+        );
+      }
+      ctx.closePath();
+    }
+
+    // ── Blob class ───────────────────────────────────────────────────
+    // All positions/radii are expressed as fractions of the VIEWPORT
+    // (0–1), not the canvas, so PAD is added inside computePoints.
+    class Blob {
+      constructor({
+        cx = 0.5, cy = 0.5,    // centre (fraction of viewport)
+        rx = 0.28, ry = 0.28,  // radii (fraction of viewport)
+        color = '#E24080',
+        nPts = 7,
+        phOff = 0,             // phase offset — stagger blobs in time
+        driftX = 0.07,         // drift amplitude X (fraction of viewport)
+        driftY = 0.07,         // drift amplitude Y
+        wobble = 0.14,         // radial wobble amplitude
+      } = {}) {
+        Object.assign(this, { cx, cy, rx, ry, color, nPts, phOff, driftX, driftY, wobble });
+
+        // Each control point gets its own independent oscillation params
+        this.pts = Array.from({ length: nPts }, (_, i) => ({
+          baseAngle: (i / nPts) * Math.PI * 2,
+          // radial wobble — slow, 30-65 s period
+          rAmp:  wobble * (0.15 + Math.random() * 1.7),
+          rFreq: 0.16 + Math.random() * 0.22,
+          rPh:   Math.random() * Math.PI * 2,
+          // angular wobble — very slow, 55-105 s period
+          aAmp:  0.03 + Math.random() * 0.10,
+          aFreq: 0.05 + Math.random() * 0.08,
+          aPh:   Math.random() * Math.PI * 2,
+        }));
+      }
+
+      computePoints(t) {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        // Lava-lamp drift: sinusoid in X and Y with different periods
+        // Periods ≈ 52 s (X) and 70 s (Y) → very languid
+        const dx = Math.sin(t * 0.22 + this.phOff)       * this.driftX * vw;
+        const dy = Math.cos(t * 0.17 + this.phOff * 1.6) * this.driftY * vh;
+
+        const cx = this.cx * vw + PAD + dx;
+        const cy = this.cy * vh + PAD + dy;
+        const rx = this.rx * vw;
+        const ry = this.ry * vh;
+
+        return this.pts.map(({ baseAngle, rAmp, rFreq, rPh, aAmp, aFreq, aPh }) => {
+          const radMul = 1 + rAmp  * Math.sin(t * rFreq + rPh);
+          const angle  = baseAngle + aAmp * Math.sin(t * aFreq + aPh);
+          return {
+            x: cx + Math.cos(angle) * rx * radMul,
+            y: cy + Math.sin(angle) * ry * radMul,
+          };
+        });
+      }
+
+      draw(t) {
+        drawBlob(this.computePoints(t));
+        ctx.fillStyle = this.color;
+        ctx.fill();
+      }
+    }
+
+    // ── Blob layout — inspired by reference (soft pink fluid poster) ─
+    // Layer order: back → front (painted in order)
+    const blobs = [
+
+      // 1. Large cream/blush highlight — upper-centre-right
+      new Blob({ cx:0.68, cy:0.14, rx:0.42, ry:0.36,
+                 color:'#FDF0F5', nPts:8, phOff:0.0,
+                 driftX:0.06, driftY:0.05, wobble:0.11 }),
+
+      // 2. Soft pink — mid-left
+      new Blob({ cx:0.16, cy:0.44, rx:0.28, ry:0.32,
+                 color:'#F5B0CE', nPts:7, phOff:2.3,
+                 driftX:0.08, driftY:0.08, wobble:0.15 }),
+
+      // 3. Hot pink dominant mass — lower-centre
+      new Blob({ cx:0.44, cy:0.80, rx:0.54, ry:0.40,
+                 color:'#E24080', nPts:9, phOff:1.4,
+                 driftX:0.05, driftY:0.06, wobble:0.10 }),
+
+      // 4. Rose — right side
+      new Blob({ cx:0.80, cy:0.54, rx:0.28, ry:0.30,
+                 color:'#C4256A', nPts:7, phOff:3.8,
+                 driftX:0.07, driftY:0.07, wobble:0.13 }),
+
+      // 5. Plum/lavender — lower-left
+      new Blob({ cx:0.07, cy:0.82, rx:0.38, ry:0.18,
+                 color:'#8B1A6B', nPts:11, phOff:5.1,
+                 driftX:0.09, driftY:0.10, wobble:0.34 }),
+
+      // 6. Deep plum — upper-left edge
+      new Blob({ cx:0.10, cy:0.10, rx:0.26, ry:0.12,
+                 color:'#3C0C38', nPts:10, phOff:6.3,
+                 driftX:0.07, driftY:0.08, wobble:0.30 }),
+
+      // 7. Small cream dot — upper-right (matches reference accent circles)
+      new Blob({ cx:0.91, cy:0.16, rx:0.08, ry:0.09,
+                 color:'#FAF9F9', nPts:6, phOff:1.1,
+                 driftX:0.03, driftY:0.04, wobble:0.06 }),
+
+      // 8. Small cream dot — lower-right
+      new Blob({ cx:0.82, cy:0.90, rx:0.07, ry:0.08,
+                 color:'#FAF9F9', nPts:6, phOff:4.7,
+                 driftX:0.03, driftY:0.03, wobble:0.05 }),
+    ];
+
+    // ── Background gradient ──────────────────────────────────────────
+    function drawBg() {
+      const w = canvas.width, h = canvas.height;
+      const g = ctx.createLinearGradient(w * 0.1, 0, w * 0.9, h);
+      g.addColorStop(0.00, '#FDF0F5');
+      g.addColorStop(0.28, '#F5B0CE');
+      g.addColorStop(0.60, '#E24080');
+      g.addColorStop(1.00, '#C4256A');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    // ── Render loop ──────────────────────────────────────────────────
+    let lastTs  = null;
+    let elapsed = 0; // seconds
+
+    function render(ts) {
+      if (lastTs === null) lastTs = ts;
+      // cap dt to 100 ms so a backgrounded tab doesn't jump
+      elapsed += Math.min(ts - lastTs, 100) / 1000;
+      lastTs = ts;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBg();
+      blobs.forEach(b => b.draw(elapsed));
+
+      requestAnimationFrame(render);
+    }
+
+    requestAnimationFrame(render);
+
+    // ── Hamburger menu ────────────────────────────────────────────
+    const hamburger = document.getElementById('hamburger');
+    const navLinks  = document.getElementById('nav-links');
+
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('open');
+      navLinks.classList.toggle('open');
+    });
+
+    document.querySelectorAll('.nav-close').forEach(link => {
+      link.addEventListener('click', () => {
+        hamburger.classList.remove('open');
+        navLinks.classList.remove('open');
+      });
+    });
+
+    // ── Tap to flip on mobile — matchMedia stays in sync with CSS breakpoints ──
+    const mobileBreak = window.matchMedia('(max-width: 768px)');
+    document.querySelectorAll('.flip-card').forEach(card => {
+      card.addEventListener('click', () => {
+        if (mobileBreak.matches) {
+          card.querySelector('.flip-card-inner').classList.toggle('flipped');
+        }
+      });
+    });
+
+    // ── Scroll animations ──────────────────────────────────────────
+    const scrollObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          scrollObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.anim-up, .anim-right')
+            .forEach(el => scrollObserver.observe(el));
+  </script>
+</body>
+</html>
