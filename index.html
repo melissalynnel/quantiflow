@@ -473,6 +473,9 @@
         transition: transform 0.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) !important;
       }
 
+      /* suppress desktop hover on mobile */
+      .flip-card:hover .flip-card-inner { transform: none !important; }
+
       .flip-card-front,
       .flip-card-back {
         position: absolute !important;
@@ -532,12 +535,7 @@
       .flip-card { min-height: 200px; }
     }
 
-    /* desktop: suppress click-flip; hover handles rotation via higher specificity */
-    @media (min-width: 769px) {
-      .flip-card-inner.flipped { transform: none; }
-    }
-
-    /* anchor offset so fixed nav doesn't cover targets */
+/* anchor offset so fixed nav doesn't cover targets */
     #section-2,
     #section-3 {
       scroll-margin-top: 75px;
@@ -603,9 +601,9 @@
       transform: rotateY(180deg);
     }
 
-    /* click-to-flip (used by mobile tap; suppressed on desktop via higher-specificity hover rule) */
-    .flip-card-inner.flipped {
-      transform: rotateY(180deg);
+    /* mobile tap-flip — specificity (0,3,0) + !important beats the hover suppressor when .flipped is present */
+    .flip-card .flip-card-inner.flipped {
+      transform: rotateY(180deg) !important;
     }
 
     .flip-card-front,
