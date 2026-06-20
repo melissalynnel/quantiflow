@@ -403,6 +403,10 @@
     /* form slides in as one unit */
     .mission-form { transition-delay: 0.15s; }
 
+    /* mobile-only elements hidden on desktop */
+    .mobile-drawer,
+    .nav-overlay { display: none; }
+
     /* ── hamburger ── */
     .hamburger {
       display: none;
@@ -457,10 +461,11 @@
         background: rgba(60, 12, 56, 0.4);
         z-index: 98;
       }
-      .nav-overlay.open { display: block; }
+      .nav-overlay.open { display: block !important; }
 
       /* slide-in drawer */
       .mobile-drawer {
+        display: flex !important;
         position: fixed;
         top: 0;
         right: 0;
@@ -529,7 +534,7 @@
 
       .hero h1 {
         white-space: normal;
-        font-size: clamp(2.4rem, 10vw, 3.4rem);
+        font-size: clamp(3rem, 15vw, 4.8rem);
       }
 
       .hero p {
@@ -913,13 +918,13 @@
   <!-- ── Cards intro header ── -->
   <div id="section-2" class="cards-header anim-up">
     <h2>
-      Too many women are not getting the care they need for their heavy periods.
+      Too many women don't get the care they need for their heavy periods.
       <em>Quantiflow changes that<span style="color:#E21C21;">.</span></em>
     </h2>
   </div>
 
-  <!-- ── Tap hint (mobile only) ── -->
-  <p class="tap-hint anim-up">Flip each card to see Quantiflow's solution</p>
+  <!-- ── Scroll hint (mobile only) ── -->
+  <p class="tap-hint anim-up">Scroll to reveal each solution</p>
 
   <!-- ── Cards section ── -->
   <section class="cards-section">
@@ -1075,7 +1080,7 @@
       constructor({
         cx = 0.5, cy = 0.5,    // centre (fraction of viewport)
         rx = 0.28, ry = 0.28,  // radii (fraction of viewport)
-        color = '#E24080',
+        color = '#D4899E',
         nPts = 7,
         phOff = 0,             // phase offset — stagger blobs in time
         driftX = 0.07,         // drift amplitude X (fraction of viewport)
@@ -1145,22 +1150,22 @@
 
       // 3. Hot pink dominant mass — lower-centre
       new Blob({ cx:0.44, cy:0.80, rx:0.54, ry:0.40,
-                 color:'#E24080', nPts:9, phOff:1.4,
+                 color:'#D4899E', nPts:9, phOff:1.4,
                  driftX:0.05, driftY:0.06, wobble:0.10 }),
 
       // 4. Rose — right side
       new Blob({ cx:0.80, cy:0.54, rx:0.28, ry:0.30,
-                 color:'#C4256A', nPts:7, phOff:3.8,
+                 color:'#C4899E', nPts:7, phOff:3.8,
                  driftX:0.07, driftY:0.07, wobble:0.13 }),
 
       // 5. Plum/lavender — lower-left
       new Blob({ cx:0.07, cy:0.82, rx:0.38, ry:0.18,
-                 color:'#8B1A6B', nPts:11, phOff:5.1,
+                 color:'#8A5A7A', nPts:11, phOff:5.1,
                  driftX:0.09, driftY:0.10, wobble:0.34 }),
 
       // 6. Deep plum — upper-left edge
       new Blob({ cx:0.10, cy:0.10, rx:0.26, ry:0.12,
-                 color:'#3C0C38', nPts:10, phOff:6.3,
+                 color:'#5A3A58', nPts:10, phOff:6.3,
                  driftX:0.07, driftY:0.08, wobble:0.30 }),
 
       // 7. Small cream dot — upper-right (matches reference accent circles)
@@ -1180,8 +1185,8 @@
       const g = ctx.createLinearGradient(w * 0.1, 0, w * 0.9, h);
       g.addColorStop(0.00, '#FDF0F5');
       g.addColorStop(0.28, '#F5B0CE');
-      g.addColorStop(0.60, '#E24080');
-      g.addColorStop(1.00, '#C4256A');
+      g.addColorStop(0.60, '#D4899E');
+      g.addColorStop(1.00, '#C4899E');
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
     }
@@ -1228,15 +1233,26 @@
       link.addEventListener('click', closeMenu);
     });
 
-    // ── Tap to flip on mobile — matchMedia stays in sync with CSS breakpoints ──
+    // ── Scroll-to-flip on mobile ───────────────────────────────────
     const mobileBreak = window.matchMedia('(max-width: 768px)');
-    document.querySelectorAll('.flip-card').forEach(card => {
-      card.addEventListener('click', () => {
-        if (mobileBreak.matches) {
-          card.querySelector('.flip-card-inner').classList.toggle('flipped');
+
+    function updateCardFlips() {
+      if (!mobileBreak.matches) return;
+      const midY = window.innerHeight / 2;
+      document.querySelectorAll('.flip-card').forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const cardCenter = rect.top + rect.height / 2;
+        const inner = card.querySelector('.flip-card-inner');
+        if (cardCenter < midY) {
+          inner.classList.add('flipped');
+        } else {
+          inner.classList.remove('flipped');
         }
       });
-    });
+    }
+
+    window.addEventListener('scroll', updateCardFlips, { passive: true });
+    updateCardFlips();
 
     // ── Scroll animations ──────────────────────────────────────────
     const scrollObserver = new IntersectionObserver((entries) => {
