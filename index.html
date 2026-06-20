@@ -69,12 +69,17 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
       text-decoration: none;
-      color: #D4B0E8;
+      color: #F0A0C0;
       transition: color 0.2s ease;
     }
 
     .nav-links a:hover {
-      color: #E21C21;
+      color: #8A5A7A;
+    }
+
+    .nav-links .btn-nav-waitlist,
+    .nav-links .btn-nav-waitlist:hover {
+      color: #FAF9F9;
     }
 
     .btn-nav-waitlist {
@@ -85,7 +90,7 @@
       text-transform: uppercase;
       text-decoration: none;
       color: #FAF9F9;
-      background: #3C0C38;
+      background: #D4899E;
       border: none;
       border-radius: 100px;
       padding: 0.6rem 1.4rem;
@@ -95,8 +100,8 @@
     }
 
     .btn-nav-waitlist:hover {
-      background: #5a1254;
-      color: #E21C21;
+      background: #8A5A7A;
+      color: #FAF9F9;
       transform: translateY(-1px);
       box-shadow: 0 6px 20px rgba(60, 12, 56, 0.55);
     }
@@ -497,7 +502,7 @@
         background: none;
         border: none;
         cursor: pointer;
-        color: #D4B0E8;
+        color: #F0A0C0;
         padding: 4px;
         display: flex;
       }
@@ -509,10 +514,10 @@
         letter-spacing: 0.08em;
         text-transform: uppercase;
         text-decoration: none;
-        color: #D4B0E8;
+        color: #F0A0C0;
         transition: color 0.2s ease;
       }
-      .drawer-link:hover { color: #E21C21; }
+      .drawer-link:hover { color: #8A5A7A; }
       .mobile-drawer .btn-nav-waitlist { font-size: 0.9rem; padding: 0.7rem 1.6rem; }
 
       /* hero layout — stack vertically, centered */
@@ -634,6 +639,12 @@
     @media (max-width: 480px) {
       .cards-section { padding: 1rem 1.2rem 3rem; }
       .flip-card { min-height: 200px; }
+    }
+
+    /* mid-size: 2-column grid before cards get too narrow */
+    @media (min-width: 769px) and (max-width: 1300px) {
+      .cards-section { grid-template-columns: repeat(2, 1fr) !important; }
+      .flip-card { height: 360px !important; }
     }
 
 /* anchor offset so fixed nav doesn't cover targets */
@@ -923,10 +934,7 @@
     </h2>
   </div>
 
-  <!-- ── Scroll hint (mobile only) ── -->
-  <p class="tap-hint anim-up">Scroll to reveal each solution</p>
-
-  <!-- ── Cards section ── -->
+<!-- ── Cards section ── -->
   <section class="cards-section">
 
     <div class="flip-card anim-up">
